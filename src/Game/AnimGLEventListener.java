@@ -12,12 +12,11 @@ import java.util.ArrayList;
 public class AnimGLEventListener extends AnimListener {
     ArrayList<Letter> letters = new ArrayList<>();
     ArrayList<Letter> stars = new ArrayList<>();
-    int[] win = new int[]{28, 18, 24, 26, 12, 17};
-    int[] lost = new int[]{28, 18, 24, 15, 18, 22,23};
-
-    String[] words = new String[]{"hazem", "zooma", "mahmoud", "capa", "omar"};
+    int[] win ={28, 18, 24, 26, 12, 17};
+    int[] lost = {28, 18, 24, 15, 18, 22, 23};
+    String[] words ={"hazem", "zooma", "mahmoud", "capa", "omar"};
     String randomWord;
-    String s;
+    int score = 0;
     int maxWidth = 100;
     int maxHeight = 100;
     double DotX = 10;
@@ -30,11 +29,10 @@ public class AnimGLEventListener extends AnimListener {
 
     String[] textureNames = {
             "Man1.png", "Man2.png", "Man3.png", "Man4.png",
-            "a.png", "b.png", "c.png", "d.png", "e.png", "f.png", "g.png", "h.png", "i.png", "j.png", "k.png", "l.png", "m.png", "n.png", "o.png", "p.png", "q.png", "r.png", "s.png", "t.png", "u.png", "v.png", "w.png", "x.png", "y.png", "z.png",
-            "0.png", "1.png", "2.png", "3.png", "4.png", "5.png", "6.png", "7.png", "8.png", "9.png", "..png",
-            "HealthB.png", "Health.png",
-            "Back.png",
-            "NinjaStar.png"
+            "a.png", "b.png", "c.png", "d.png", "e.png", "f.png", "g.png", "h.png", "i.png", "j.png", "k.png", "l.png",
+            "m.png", "n.png", "o.png", "p.png", "q.png", "r.png", "s.png", "t.png", "u.png", "v.png", "w.png", "x.png",
+            "y.png", "z.png", "0.png", "1.png", "2.png", "3.png", "4.png", "5.png", "6.png", "7.png", "8.png", "9.png",
+            "..png", "HealthB.png", "Health.png", "Back.png", "NinjaStar.png"
     };
     TextureReader.Texture[] texture = new TextureReader.Texture[textureNames.length];
     public int[] textures = new int[textureNames.length];
@@ -42,7 +40,6 @@ public class AnimGLEventListener extends AnimListener {
     public void init(GLAutoDrawable gld) {
         GL gl = gld.getGL();
         gl.glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-
         gl.glEnable(GL.GL_TEXTURE_2D);
         gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
         gl.glGenTextures(textureNames.length, textures, 0);
@@ -67,7 +64,6 @@ public class AnimGLEventListener extends AnimListener {
         }
         randomWord = randomWord().toLowerCase();
         DotSpace = 90 / randomWord.length();
-        s = randomWord;
         dots();
         life();
         System.out.println(randomWord);
@@ -79,19 +75,17 @@ public class AnimGLEventListener extends AnimListener {
         gl.glClear(GL.GL_COLOR_BUFFER_BIT);
         gl.glLoadIdentity();
         DrawBackground(gl);
-        for (Letter letter : letters) {
-            letter.drawSprite(gl, textures);
-        }
+        letters.forEach(letter -> letter.drawSprite(gl,textures));
         stars.forEach(star -> star.drawSprite(gl, textures));
-        if(lives ==0 ) for (int i = 0; i < lost.length; i++) {
-                if (i < 3) DrawSprite(gl, 2 + (13 * i), 50, lost[i], 1f, 3f);
-                else DrawSprite(gl, 10 + (13 * i), 50,lost[i], 1f, 3f);
-            }
 
-         if(randomWord.isEmpty()){
+        if (lives == 0) for (int i = 0; i < lost.length; i++) {
+            if (i < 3) DrawSprite(gl, 2 + (13 * i), 50, lost[i], 1f, 3f);
+            else DrawSprite(gl, 10 + (13 * i), 50, lost[i], 1f, 3f);
+        }
+        if (score == randomWord.length()) {
             for (int i = 0; i < win.length; i++) {
                 if (i < 3) DrawSprite(gl, 2 + (15 * i), 50, win[i], 1.5f, 3f);
-                else DrawSprite(gl, 12 + (15 * i), 50,win[i], 1.5f, 3f);
+                else DrawSprite(gl, 12 + (15 * i), 50, win[i], 1.5f, 3f);
             }
         }
     }
@@ -113,14 +107,14 @@ public class AnimGLEventListener extends AnimListener {
     }
 
     public void check(int code) {
-        if (!randomWord.isEmpty() && lives > 0) {
-            boolean flag = false;
+        boolean flag = false;
+        if (lives > 0 && score < randomWord.length()) {
             for (int i = 0; i < randomWord.length(); i++) {
-                if (code == (int) randomWord.charAt(i)) {
-                    randomWord = randomWord.substring(0, i) + randomWord.substring(i + 1);
+                if (letters.get(i).getTextureIndex() == textureNames.length - 5 && randomWord.charAt(i) == code) {
+                    letters.get(i).setTextureIndex(code - 93);
                     flag = true;
-                    for (int j = 0; j < s.length(); j++)
-                        if (code == (int) s.charAt(j)) letters.get(j).setTextureIndex(code - 93);
+                    score++;
+                    break; // السطر ده علشان لو عايز تخلي كل التكرارات تظهر ولا يظهر حرف واحد في المرة
                 }
             }
             if (!flag) {
@@ -129,23 +123,17 @@ public class AnimGLEventListener extends AnimListener {
             }
         }
     }
-
-
     @Override
-    public void keyTyped(KeyEvent e) {
-
-    }
+    public void keyTyped(KeyEvent e) {}
 
     @Override
     public void keyPressed(KeyEvent e) {
         int code = e.getKeyCode() + 32;
-        if(code<= 122 && code>=97) check(code);
-
+        if (code <= 122 && code >= 97) check(code);
     }
 
     @Override
     public void keyReleased(KeyEvent e) {
-
     }
 
     public void DrawSprite(GL gl, float x, float y, int index, float scaleX, float scaleY) {
